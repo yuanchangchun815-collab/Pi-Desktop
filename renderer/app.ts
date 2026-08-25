@@ -121,7 +121,11 @@ function wireEvents() {
 	sendBtn.addEventListener("click", onSend);
 	abortBtn.addEventListener("click", onAbort);
 	inputEl.addEventListener("keydown", (e) => {
-		if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+		// Enter sends; Shift+Enter inserts a newline. Ctrl/Cmd+Enter also sends
+		// (kept for compatibility).
+		const isPlainEnter = e.key === "Enter" && !e.shiftKey;
+		const isCmdEnter = (e.metaKey || e.ctrlKey) && e.key === "Enter";
+		if (isPlainEnter || isCmdEnter) {
 			e.preventDefault();
 			onSend();
 		}
