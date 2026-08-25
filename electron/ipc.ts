@@ -44,10 +44,13 @@ export function registerIpcHandlers(
 		return serviceStatus(service);
 	});
 
-	ipcMain.handle("pi:prompt", async (_e, { text, streamingBehavior }: { text: string; streamingBehavior?: "steer" | "followUp" }) => {
-		await service.prompt(text, streamingBehavior);
-		return "ok";
-	});
+	ipcMain.handle(
+		"pi:prompt",
+		async (_e, { text, streamingBehavior }: { text: string; streamingBehavior?: "steer" | "followUp" }) => {
+			await service.prompt(text, streamingBehavior);
+			return "ok";
+		},
+	);
 
 	ipcMain.handle("pi:steer", async (_e, text: string) => {
 		await service.steer(text);
@@ -162,20 +165,23 @@ export function registerIpcHandlers(
 	});
 
 	// Create a new file or directory inside the workspace.
-	ipcMain.handle("ws:create", async (_e, { parent, name, type }: { parent: string; name: string; type: "file" | "dir" }) => {
-		try {
-			const safeParent = await resolveInsideRoot(cwd(), parent);
-			const target = path.join(safeParent, name);
-			if (type === "dir") {
-				await makeDirectory(cwd(), target);
-			} else {
-				await fs.promises.writeFile(target, "", "utf8");
+	ipcMain.handle(
+		"ws:create",
+		async (_e, { parent, name, type }: { parent: string; name: string; type: "file" | "dir" }) => {
+			try {
+				const safeParent = await resolveInsideRoot(cwd(), parent);
+				const target = path.join(safeParent, name);
+				if (type === "dir") {
+					await makeDirectory(cwd(), target);
+				} else {
+					await fs.promises.writeFile(target, "", "utf8");
+				}
+				return { ok: true, path: target };
+			} catch (err: any) {
+				return { ok: false, error: err?.message ?? String(err) };
 			}
-			return { ok: true, path: target };
-		} catch (err: any) {
-			return { ok: false, error: err?.message ?? String(err) };
-		}
-	});
+		},
+	);
 
 	// Delete a file or empty directory inside the workspace.
 	ipcMain.handle("ws:delete", async (_e, target: string) => {

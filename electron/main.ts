@@ -5,13 +5,12 @@ import { PiService } from "./piService.js";
 import { registerIpcHandlers } from "./ipc.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const isDev = process.env.PI_DESKTOP_DEV === "1";
 
 let mainWindow: BrowserWindow | undefined;
 let service: PiService | undefined;
 
 // Default working directory for the agent. Can be overridden via env var.
-let defaultCwd = process.env.PI_DESKTOP_CWD ?? process.cwd();
+const defaultCwd = process.env.PI_DESKTOP_CWD ?? process.cwd();
 
 function createWindow() {
 	mainWindow = new BrowserWindow({
@@ -53,18 +52,23 @@ async function startPi() {
 	});
 	if (!mainWindow) throw new Error("No window available");
 	const win = mainWindow;
-	registerIpcHandlers(win, service, {
-		startNewSession: async () => {
-			// Reset streaming state in UI after a new session.
-			if (!win.isDestroyed()) {
-				win.webContents.send("pi:session-info", {
-					id: service!.sessionId,
-					file: service!.sessionFile,
-					cwd: defaultCwd,
-				});
-			}
+	registerIpcHandlers(
+		win,
+		service,
+		{
+			startNewSession: async () => {
+				// Reset streaming state in UI after a new session.
+				if (!win.isDestroyed()) {
+					win.webContents.send("pi:session-info", {
+						id: service!.sessionId,
+						file: service!.sessionFile,
+						cwd: defaultCwd,
+					});
+				}
+			},
 		},
-	}, () => service?.cwd ?? defaultCwd);
+		() => service?.cwd ?? defaultCwd,
+	);
 	await service.init();
 }
 

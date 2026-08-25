@@ -1,7 +1,13 @@
 import { EditorView, keymap, lineNumbers, highlightActiveLine, drawSelection } from "@codemirror/view";
 import { EditorState, Compartment } from "@codemirror/state";
 import { defaultKeymap, historyKeymap, history, indentWithTab } from "@codemirror/commands";
-import { indentOnInput, bracketMatching, foldGutter, defaultHighlightStyle, syntaxHighlighting } from "@codemirror/language";
+import {
+	indentOnInput,
+	bracketMatching,
+	foldGutter,
+	defaultHighlightStyle,
+	syntaxHighlighting,
+} from "@codemirror/language";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { javascript } from "@codemirror/lang-javascript";
 import { json } from "@codemirror/lang-json";
@@ -35,7 +41,6 @@ export class FileEditor {
 
 	constructor(container: HTMLElement) {
 		this.container = container;
-		const comp = this;
 		const state = EditorState.create({
 			doc: "",
 			extensions: [
@@ -53,7 +58,7 @@ export class FileEditor {
 				editableCompartment.of(EditorView.editable.of(true)),
 				wrapCompartment.of([]),
 				EditorView.updateListener.of((update) => {
-					if (update.docChanged) comp.onChange?.();
+					if (update.docChanged) this.onChange?.();
 				}),
 			],
 		});

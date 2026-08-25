@@ -60,7 +60,6 @@ export class PiService {
 					services,
 					sessionManager,
 					sessionStartEvent,
-					
 				})),
 				services,
 				diagnostics: services.diagnostics,
@@ -156,9 +155,7 @@ export class PiService {
 		const modelRuntime = (this.runtime.services as any)?.modelRuntime;
 		if (modelRuntime) {
 			const [provider, ...rest] = pattern.split("/");
-			const model = rest.length
-				? modelRuntime.getModel(provider, rest.join("/"))
-				: undefined;
+			const model = rest.length ? modelRuntime.getModel(provider, rest.join("/")) : undefined;
 			if (model) {
 				await session.setModel(model);
 			}

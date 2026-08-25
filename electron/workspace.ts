@@ -2,7 +2,6 @@ import fs from "node:fs";
 import path from "node:path";
 
 const MAX_PREVIEW_BYTES = 256 * 1024; // 256 KB preview cap
-const PEEK_LINES = 5000;
 
 export interface FileNode {
 	name: string;
@@ -93,7 +92,9 @@ export async function readFilePreview(filePath: string): Promise<ReadFileResult>
 }
 
 /** Read a file entirely as base64 bytes (for PDF/DOCX preview). Capped at 40MB. */
-export async function readBinaryBase64(filePath: string): Promise<{ base64: string; mime: string; bytes: number; truncated: boolean }> {
+export async function readBinaryBase64(
+	filePath: string,
+): Promise<{ base64: string; mime: string; bytes: number; truncated: boolean }> {
 	const MAX_BYTES = 40 * 1024 * 1024;
 	const mime = mimeFromName(path.basename(filePath));
 	const stat = await fs.promises.stat(filePath);
@@ -112,10 +113,14 @@ export async function readBinaryBase64(filePath: string): Promise<{ base64: stri
 function mimeFromName(name: string): string {
 	const ext = path.extname(name).toLowerCase();
 	switch (ext) {
-		case ".pdf": return "application/pdf";
-		case ".docx": return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-		case ".doc": return "application/msword";
-		default: return "application/octet-stream";
+		case ".pdf":
+			return "application/pdf";
+		case ".docx":
+			return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+		case ".doc":
+			return "application/msword";
+		default:
+			return "application/octet-stream";
 	}
 }
 
@@ -153,29 +158,34 @@ function docxXmlToPlainText(xml: string): string {
 	const run = /<w:t[^>]*>([\s\S]*?)<\/w:t>/g;
 	const out: string[] = [];
 	let m: RegExpExecArray | null;
-	let last = 0;
 	while ((m = run.exec(s)) !== null) {
 		// anything between runs that isn't a tag path we keep as separators ignored
 		const text = m[1]
 			.replace(/&amp;/g, "&")
 			.replace(/&lt;/g, "<")
 			.replace(/&gt;/g, ">")
-			.replace(/&quot;/g, "\"")
+			.replace(/&quot;/g, '"')
 			.replace(/&#39;/g, "'")
 			.replace(/_x000D_/g, "");
 		out.push(text);
 	}
-	return out.join("").replace(/\n{3,}/g, "\n\n").replace(/[ \t]+\n/g, "\n").trim();
+	return out
+		.join("")
+		.replace(/\n{3,}/g, "\n\n")
+		.replace(/[ \t]+\n/g, "\n")
+		.trim();
 }
 
-/** Heuristic binary detection from the first chunk (NUL byte or non-text ratio). */function isBinary(buf: Buffer): boolean {
+/** Heuristic binary detection from the first chunk (NUL byte or non-text ratio). */ function isBinary(
+	buf: Buffer,
+): boolean {
 	if (buf.length === 0) return false;
 	const sample = buf.subarray(0, Math.min(buf.length, 8192));
 	// Common UTF-8 BOM is allowed
 	let suspicious = 0;
 	for (let i = 0; i < sample.length; i++) {
 		if (sample[i] === 0) return true; // NUL byte -> binary
-		if (sample[i] < 0x09 || (sample[i] > 0x0d && sample[i] < 0x20) && sample[i] !== 0x1b) {
+		if (sample[i] < 0x09 || (sample[i] > 0x0d && sample[i] < 0x20 && sample[i] !== 0x1b)) {
 			suspicious++;
 			if (suspicious > 8) return true;
 		} else {

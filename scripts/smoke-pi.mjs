@@ -1,16 +1,15 @@
 // Headless smoke test for the pi SDK integration used by the desktop app.
 // Run with: node scripts/smoke-pi.mjs
-import {
-	createAgentSession,
-	ModelRuntime,
-	SessionManager,
-} from "@earendil-works/pi-coding-agent";
+import { createAgentSession, ModelRuntime, SessionManager } from "@earendil-works/pi-coding-agent";
 
 const modelRuntime = await ModelRuntime.create();
 
 // Get available models so we pick one that has auth configured.
 const available = await modelRuntime.getAvailable();
-console.log("Available models:", available.slice(0, 5).map((m) => m.id));
+console.log(
+	"Available models:",
+	available.slice(0, 5).map((m) => m.id),
+);
 
 if (available.length === 0) {
 	console.log("No authenticated models found. Configure a provider first (e.g. ANTHROPIC_API_KEY).");

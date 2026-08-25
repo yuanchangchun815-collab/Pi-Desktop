@@ -72,7 +72,7 @@ export class MentionAutocomplete {
 		this.render(ctx.start, ctx.q);
 	}
 
-	private render(start: number, q: string) {
+	private render(start: number, _q: string) {
 		let pop = this.popup;
 		if (!pop) {
 			pop = document.createElement("div");
@@ -99,7 +99,7 @@ export class MentionAutocomplete {
 			row.appendChild(path);
 			row.addEventListener("mousedown", (e) => {
 				e.preventDefault();
-			this.insert(start, item);
+				this.insert(start, item);
 			});
 			pop.appendChild(row);
 		});

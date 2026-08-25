@@ -58,12 +58,13 @@ const editorBodies = document.getElementById("editor-bodies") as HTMLDivElement;
 // Workspace / files state
 let currentCwd = "";
 const expandedDirs = new Set<string>();
-let editor: {
-	path: string;
-	original: string;
-	dirty: boolean;
-} | undefined;
-let originalContent = "";
+let editor:
+	| {
+			path: string;
+			original: string;
+			dirty: boolean;
+	  }
+	| undefined;
 // "md" | "html" | "pdf" | "docx" | "none" — controls which preview renderer runs
 let previewKind: "md" | "html" | "pdf" | "docx" | "none" = "none";
 const modelOptions = new Map<string, object>();
@@ -159,8 +160,12 @@ function wireEvents() {
 		}
 	});
 	gitRefresh.addEventListener("click", loadGit);
-	gitClose.addEventListener("click", () => { gitPanel.hidden = true; });
-	gitDiffClose.addEventListener("click", () => { gitDiffWrap.hidden = true; });
+	gitClose.addEventListener("click", () => {
+		gitPanel.hidden = true;
+	});
+	gitDiffClose.addEventListener("click", () => {
+		gitDiffWrap.hidden = true;
+	});
 
 	// Workspace / files events
 	changeDirBtn.addEventListener("click", onChangeDir);
@@ -213,8 +218,7 @@ function wireEvents() {
 			appendRefs(paths);
 			return;
 		}
-		const p = e.dataTransfer?.getData("application/x-file-path")
-			|| e.dataTransfer?.getData("text/plain");
+		const p = e.dataTransfer?.getData("application/x-file-path") || e.dataTransfer?.getData("text/plain");
 		if (p) appendRefs([p]);
 	});
 	window.addEventListener("keydown", (e) => {
@@ -428,7 +432,8 @@ function beginTool(name: string, id: string, args: any) {
 	const argSummary = summarizeArgs(name, args);
 	const head = document.createElement("div");
 	head.className = "tool-head";
-	head.innerHTML = `<span class="tool-name">${escapeHtml(name)}</span>` +
+	head.innerHTML =
+		`<span class="tool-name">${escapeHtml(name)}</span>` +
 		(argSummary ? `<span class="tool-args">${escapeHtml(argSummary)}</span>` : "") +
 		`<span class="status">运行中…</span>`;
 	const body = document.createElement("div");
@@ -506,8 +511,9 @@ function updateSessionBadge(info: any) {
 }
 
 function escapeHtml(s: string) {
-	return s.replace(/[&<>"']/g, (c) =>
-		({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string),
+	return s.replace(
+		/[&<>"']/g,
+		(c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] as string,
 	);
 }
 
@@ -528,7 +534,8 @@ function summarizeArgs(name: string, args: any): string {
 				if (cmd) return "$ " + String(cmd).slice(0, 60);
 				break;
 			}
-			default: break;
+			default:
+				break;
 		}
 	} catch {}
 	return "";
@@ -552,7 +559,11 @@ function stringifyPartial(partial: any): string {
 		const out = (partial as any).output ?? (partial as any).text;
 		if (typeof out === "string") return out;
 	}
-	try { return JSON.stringify(partial); } catch { return ""; }
+	try {
+		return JSON.stringify(partial);
+	} catch {
+		return "";
+	}
 }
 
 /** Extract displayable text from a ToolResult object on tool_execution_end. */
@@ -584,9 +595,15 @@ function toolResultText(result: any): string {
 	}
 	if (parts.length) return parts.join("\n");
 	if (details && typeof details === "object") {
-		try { return JSON.stringify(details, null, 2); } catch {}
+		try {
+			return JSON.stringify(details, null, 2);
+		} catch {}
 	}
-	try { return JSON.stringify(result, null, 2); } catch { return ""; }
+	try {
+		return JSON.stringify(result, null, 2);
+	} catch {
+		return "";
+	}
 }
 
 function scroll(el: Element) {
@@ -606,7 +623,7 @@ async function toggleSessions() {
 	if (sessionsPanel.hidden) {
 		const list = await window.pi.listSessions();
 		sessionsList.innerHTML = "";
-		for (const item of (list as any[])) {
+		for (const item of list as any[]) {
 			const li = document.createElement("li");
 			const file = document.createElement("span");
 			file.className = "sess-file";
@@ -804,7 +821,9 @@ function fileIconFor(name: string): string {
 async function openFile(file: string) {
 	// Warn before discarding unsaved edits in the current file.
 	if (editor?.dirty && editor.path !== file) {
-		const keep = confirm("当前文件有未保存的修改，打开其他文件前要保存吗？\n“确定”=丢弃修改，打开新文件；“取消”=留在当前文件。");
+		const keep = confirm(
+			"当前文件有未保存的修改，打开其他文件前要保存吗？\n“确定”=丢弃修改，打开新文件；“取消”=留在当前文件。",
+		);
 		if (!keep) return;
 	}
 	const res = await window.pi.ws.read(file);
@@ -828,7 +847,6 @@ async function openFile(file: string) {
 			editorStatus.textContent = `${basename(file)}（预览模式，不可编辑）`;
 			editorStatus.className = "";
 			editor = undefined;
-			originalContent = "";
 			await renderPreviewFor(file);
 		} else {
 			fileEditor.enable(false);
@@ -840,7 +858,7 @@ async function openFile(file: string) {
 		}
 		return;
 	}
-	let content = res.content;
+	const content = res.content;
 	editorPanel.hidden = false;
 	editorTitle.textContent = basename(file);
 	editorMeta.textContent = `${file} · ${(res.bytes / 1024).toFixed(1)} KB · UTF-8`;
@@ -855,7 +873,6 @@ async function openFile(file: string) {
 		editorStatus.className = "";
 	}
 	editor = { path: file, original: content, dirty: false };
-	originalContent = content;
 	saveBtn.disabled = true;
 	await renderPreviewFor(file);
 	fileEditor.scrollToTop();
@@ -886,7 +903,6 @@ async function onSave() {
 	if (res.ok) {
 		editor.dirty = false;
 		editor.original = content;
-		originalContent = content;
 		saveBtn.disabled = true;
 		editorStatus.textContent = "✅ 已保存";
 		editorStatus.className = "saved";
@@ -953,10 +969,7 @@ function fileMenu(entry: any) {
 	if (entry.type === "file") {
 		items.unshift({ label: "在编辑器中打开", run: () => openFile(entry.path) });
 	}
-	items.push(
-		{ label: "重命名…", run: () => doRename(entry) },
-		{ label: "删除", run: () => doDelete(entry) },
-	);
+	items.push({ label: "重命名…", run: () => doRename(entry) }, { label: "删除", run: () => doDelete(entry) });
 
 	for (const it of items) {
 		const b = document.createElement("button");
@@ -1022,7 +1035,7 @@ async function onCreateNode() {
 
 /** Insert @path references into the chat input at the caret. */
 function appendRefs(paths: string[]) {
-	let text = paths.map((p) => `@${p}`).join(" ");
+	const text = paths.map((p) => `@${p}`).join(" ");
 	const caret = inputEl.selectionStart ?? inputEl.value.length;
 	const before = inputEl.value.slice(0, caret);
 	const after = inputEl.value.slice(caret);
@@ -1087,12 +1100,6 @@ async function showDiff(filePath: string) {
 // =====================================================================
 // Markdown / file preview
 // =====================================================================
-
-function isPreviewableFile(file: string) {
-	if (/\.(md|markdown|mdown|mkd)$/i.test(file)) return true;
-	if (/\.(html|htm)$/i.test(file)) return true;
-	return false;
-}
 
 function previewKindOf(file: string): "md" | "html" | "pdf" | "docx" | "none" {
 	if (/\.(md|markdown|mdown|mkd)$/i.test(file)) return "md";
@@ -1236,7 +1243,7 @@ function startDrag(rz: HTMLDivElement, startX: number) {
 	const sidebarBaseW = sidebarW;
 	const editorBaseW = editorW;
 	// Current editor vs preview split (preview width %, relative to bodies width)
-	let previewBase = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--preview-w")) || 50;
+	const previewBase = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--preview-w")) || 50;
 	const bodiesW = (document.getElementById("editor-bodies") as HTMLElement).getBoundingClientRect().width;
 
 	const onMove = (e: MouseEvent) => {

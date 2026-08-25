@@ -81,21 +81,32 @@ export class Git {
 	}
 
 	/** Stream the full diff in chunks for large outputs. */
-	async diffStream(filePath: string | undefined, signal?: { aborted: boolean }): Promise<{ stdout: string; stats: GitDiffResult["stats"] }> {
+	async diffStream(
+		filePath: string | undefined,
+		_signal?: { aborted: boolean },
+	): Promise<{ stdout: string; stats: GitDiffResult["stats"] }> {
 		return this.diff(filePath);
 	}
 }
 
 function statusLabel(code: string): string {
 	switch (code) {
-		case "M": return "modified";
-		case "A": return "added";
-		case "D": return "deleted";
-		case "R": return "renamed";
-		case "U": return "conflict";
-		case "??": return "untracked";
-		case "MM": return "modified+staged";
-		default: return code;
+		case "M":
+			return "modified";
+		case "A":
+			return "added";
+		case "D":
+			return "deleted";
+		case "R":
+			return "renamed";
+		case "U":
+			return "conflict";
+		case "??":
+			return "untracked";
+		case "MM":
+			return "modified+staged";
+		default:
+			return code;
 	}
 }
 
