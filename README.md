@@ -81,6 +81,7 @@ npm run build:renderer # 仅打包渲染进程（esbuild）
 npm run build:assets # 复制 renderer 静态资源
 npm run build        # 全部构建
 npm start            # 构建并运行
+```
 
 ### 打包发布
 
@@ -112,7 +113,6 @@ npm run dist:mac    # 生成 macOS dmg + zip
 生成脚本在 `scripts/build-icons/`（自包含，仅用 Node 内建模块 + 系统 `sips`/`iconutil`，无需额外依赖）。
 
 > 注意：打包体积较大（约 400MB），因为 pi SDK 为支持全部 provider（含 AWS Bedrock 等）绑定了多个云 SDK。若要精简，可裁剪 pi-ai 的 provider。
-```
 
 ### 无头冒烟测试
 

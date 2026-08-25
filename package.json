@@ -13,12 +13,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/<your-org>/pi-desktop.git"
+    "url": "https://github.com/yuanchangchun815-collab/Pi-Desktop.git"
   },
   "bugs": {
-    "url": "https://github.com/<your-org>/pi-desktop/issues"
+    "url": "https://github.com/yuanchangchun815-collab/Pi-Desktop/issues"
   },
-  "homepage": "https://github.com/<your-org>/pi-desktop#readme",
+  "homepage": "https://github.com/yuanchangchun815-collab/Pi-Desktop#readme",
   "type": "module",
   "main": "dist/electron/main.js",
   "scripts": {

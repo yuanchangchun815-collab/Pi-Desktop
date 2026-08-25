@@ -285,18 +285,20 @@ function handleEvent(ev: any) {
 		case "message_update": {
 			const u = ev.assistantMessageEvent;
 			if (!u) break;
+			ensureMessage();
 			if (u.type === "text_delta") appendText(u.delta);
 			else if (u.type === "thinking_delta") appendThinking(u.delta);
 			break;
 		}
 
 		case "tool_execution_start":
-			beginTool(ev.toolName, ev.toolCallId);
+			ensureMessage();
+			beginTool(ev.toolName, ev.toolCallId, ev.args);
 			break;
 		case "tool_execution_update": {
 			const b = active?.toolCalls.get(ev.toolCallId);
 			if (b) {
-				b.stream += ev.output ?? "";
+				b.stream += stringifyPartial(ev.partialResult);
 				b.bodyEl.textContent = b.stream;
 				scroll(b.el);
 			}
@@ -305,8 +307,9 @@ function handleEvent(ev: any) {
 		case "tool_execution_end": {
 			const b = active?.toolCalls.get(ev.toolCallId);
 			if (b) {
+				b.stream = toolResultText(ev.result);
 				b.complete = true;
-				b.bodyEl.textContent = b.stream;
+				b.bodyEl.textContent = b.stream || (ev.isError ? "(执行出错，无输出)" : "(无输出)");
 				setToolStatus(b.el, ev.isError ? "✗ error" : "✓ done");
 			}
 			break;
@@ -334,8 +337,13 @@ function handleEvent(ev: any) {
 }
 
 // ---- Message rendering helpers ----
+// A message is rendered lazily: beginMessage only books a slot (no DOM);
+// ensureMessage materializes the bubble on the first real content. This avoids
+// the empty bubbles caused by tool_result message_start events.
+let msgReady = false;
+
 function beginMessage() {
-	if (active && active.textEl.textContent) finishActive();
+	if (active) return; // keep streaming into the current assistant message
 	active = {
 		el: document.createElement("div"),
 		textEl: document.createElement("div"),
@@ -343,15 +351,22 @@ function beginMessage() {
 		thinkingBuffer: "",
 		toolCalls: new Map(),
 	};
-	active.el.className = "msg assistant";
+	msgReady = false;
+}
+
+/** Create the DOM for the current message if not yet materialized and there is content. */
+function ensureMessage() {
+	if (!active) beginMessage();
+	if (msgReady || !active) return;
+	active.el!.className = "msg assistant";
 	const header = document.createElement("div");
 	header.className = "msg-header";
 	header.textContent = "pi";
-	active.el.appendChild(header);
+	active.el!.appendChild(header);
 	active.textEl.className = "bubble";
-	active.el.appendChild(active.textEl);
-	messagesEl.appendChild(active.el);
-	scroll(messagesEl);
+	active.el!.appendChild(active.textEl);
+	messagesEl.appendChild(active.el!);
+	msgReady = true;
 }
 
 function addMessage(role: "user" | "assistant", text: string, error = false) {
@@ -362,23 +377,24 @@ function addMessage(role: "user" | "assistant", text: string, error = false) {
 	header.textContent = role === "user" ? "你" : "pi";
 	const bubble = document.createElement("div");
 	bubble.className = "bubble";
-	if (error) bubble.textContent = text;
-	else bubble.textContent = text;
+	bubble.textContent = text;
 	wrap.appendChild(header);
 	wrap.appendChild(bubble);
 	messagesEl.appendChild(wrap);
-	if (role === "assistant") active = {
+	active = {
 		el: wrap,
 		textEl: bubble,
 		buffer: text,
 		thinkingBuffer: "",
 		toolCalls: new Map(),
 	};
+	msgReady = true;
 	scroll(wrap);
 }
 
 function appendText(delta: string) {
 	if (!active) beginMessage();
+	ensureMessage();
 	active!.buffer += delta;
 	active!.textEl.textContent = active!.buffer;
 	scroll(active!.el!);
@@ -386,14 +402,15 @@ function appendText(delta: string) {
 
 function appendThinking(delta: string) {
 	if (!active) beginMessage();
+	ensureMessage();
 	if (!active!.thinkingEl) {
 		active!.thinkingEl = document.createElement("div");
 		active!.thinkingEl.className = "thinking";
 		const label = document.createElement("span");
 		label.textContent = "思考";
-		active!.thinkingEl.appendChild(label);
+		active!.thinkingEl!.appendChild(label);
 		const pre = document.createElement("div");
-		active!.thinkingEl.appendChild(pre);
+		active!.thinkingEl!.appendChild(pre);
 		active!.el!.insertBefore(active!.thinkingEl, active!.textEl);
 	}
 	active!.thinkingBuffer += delta;
@@ -402,23 +419,27 @@ function appendThinking(delta: string) {
 	scroll(active!.el!);
 }
 
-function beginTool(name: string, id: string) {
+function beginTool(name: string, id: string, args: any) {
 	if (!active) beginMessage();
+	ensureMessage();
 	const wrap = document.createElement("div");
 	wrap.className = "tool";
 	wrap.dataset.id = id;
+	const argSummary = summarizeArgs(name, args);
 	const head = document.createElement("div");
 	head.className = "tool-head";
-	head.innerHTML = `<span class="tool-name">${escapeHtml(name)}</span><span class="status">运行中…</span>`;
+	head.innerHTML = `<span class="tool-name">${escapeHtml(name)}</span>` +
+		(argSummary ? `<span class="tool-args">${escapeHtml(argSummary)}</span>` : "") +
+		`<span class="status">运行中…</span>`;
 	const body = document.createElement("div");
 	body.className = "tool-body";
-	body.style.display = "none";
+	// Keep the tool output visible by default so edits/diffs are not hidden.
+	body.style.display = "block";
 	head.addEventListener("click", () => {
 		body.style.display = body.style.display === "none" ? "block" : "none";
 	});
 	wrap.appendChild(head);
 	wrap.appendChild(body);
-	// Insert before the text bubble so text stays at the bottom.
 	active!.el!.insertBefore(wrap, active!.textEl);
 	active!.toolCalls.set(id, { el: wrap, bodyEl: body, stream: "", complete: false });
 	setToolStatus(wrap, "运行中…");
@@ -432,6 +453,7 @@ function setToolStatus(el: HTMLDivElement, text: string) {
 
 function finishActive() {
 	active = undefined;
+	msgReady = false;
 }
 
 function pushAssistantError(err: any) {
@@ -487,6 +509,84 @@ function escapeHtml(s: string) {
 	return s.replace(/[&<>"']/g, (c) =>
 		({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string),
 	);
+}
+
+/** Short human-readable summary of a tool call's arguments (e.g. edit target). */
+function summarizeArgs(name: string, args: any): string {
+	if (!args || typeof args !== "object") return "";
+	try {
+		switch (name) {
+			case "edit":
+			case "write":
+			case "read": {
+				const p = (args as any).path ?? (args as any).file_path ?? (args as any).file;
+				if (p) return "→ " + String(p);
+				break;
+			}
+			case "bash": {
+				const cmd = (args as any).command ?? (args as any).cmd;
+				if (cmd) return "$ " + String(cmd).slice(0, 60);
+				break;
+			}
+			default: break;
+		}
+	} catch {}
+	return "";
+}
+
+/** Tool streaming partial results are text chunks or objects; flatten to text. */
+function stringifyPartial(partial: any): string {
+	if (typeof partial === "string") return partial;
+	if (typeof partial === "number" || typeof partial === "boolean") return String(partial);
+	if (!partial) return "";
+	if (typeof partial === "object") {
+		// bash/read stream { content: [{ type: "text", text }], details }
+		const content = Array.isArray(partial.content) ? partial.content : null;
+		if (content) {
+			const parts: string[] = [];
+			for (const c of content) {
+				if (c && typeof c.text === "string") parts.push(c.text);
+			}
+			if (parts.length) return parts.join("\n");
+		}
+		const out = (partial as any).output ?? (partial as any).text;
+		if (typeof out === "string") return out;
+	}
+	try { return JSON.stringify(partial); } catch { return ""; }
+}
+
+/** Extract displayable text from a ToolResult object on tool_execution_end. */
+function toolResultText(result: any): string {
+	if (!result) return "";
+	if (typeof result === "string") return result;
+	// ToolResult shape: { content: [{ type: "text", text }], details }
+	const content = Array.isArray(result.content) ? result.content : result.content?.content;
+	const parts: string[] = [];
+	if (Array.isArray(content)) {
+		for (const c of content) {
+			if (c && typeof c === "object") {
+				if (c.type === "text" && typeof c.text === "string") parts.push(c.text);
+				else if (typeof c.text === "string") parts.push(c.text);
+			}
+		}
+	}
+	// Include the raw diff/details for edit/bash so the user can see what changed.
+	const details = result.details;
+	if (details && typeof details === "object") {
+		const diff = (details as any).diff;
+		const patch = (details as any).patch;
+		if (typeof diff === "string" && diff) parts.push("\n[修改内容 diff]\n" + diff);
+		else if (typeof patch === "string" && patch) parts.push("\n[补丁 patch]\n" + patch);
+		else {
+			const rest = Object.fromEntries(Object.entries(details as any).filter(([k]) => k !== "diff" && k !== "patch"));
+			if (Object.keys(rest).length) parts.push("\n" + JSON.stringify(rest, null, 2));
+		}
+	}
+	if (parts.length) return parts.join("\n");
+	if (details && typeof details === "object") {
+		try { return JSON.stringify(details, null, 2); } catch {}
+	}
+	try { return JSON.stringify(result, null, 2); } catch { return ""; }
 }
 
 function scroll(el: Element) {
