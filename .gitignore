@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Build output
+dist/
+release/
+*.asar
+builder-debug.yml
+builder-effective-config.yaml
+
+# Local env / secrets
+.env
+.env.*
+!.env.example
+*.local
+.npmrc
+
+# pi local config
+.pi/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Test data (demo 目录为本地演示数据，不纳入版本库)
+demo/
+
+# Logs
+*.log
+logs/

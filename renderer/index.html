@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8" />
+	<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:;" />
+	<title>Pi Desktop</title>
+	<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+	<div id="app">
+		<header id="toolbar">
+			<div class="brand">
+				<span class="logo">π</span>
+				<span class="title">Pi Desktop</span>
+			</div>
+			<div id="session-badge" title="Session">—</div>
+			<div class="spacer"></div>
+			<select id="model-select" title="切换模型">
+				<option value="">模型…</option>
+			</select>
+			<select id="thinking-select" title="思考等级">
+				<option value="off">思考: off</option>
+				<option value="low">思考: low</option>
+				<option value="medium">思考: medium</option>
+				<option value="high">思考: high</option>
+				<option value="xhigh">思考: xhigh</option>
+				<option value="max">思考: max</option>
+			</select>
+			<span id="cwd-pill" title="工作目录">—</span>
+			<button id="git-btn" title="Git 状态与变更">Git</button>
+			<button id="sessions-btn" title="历史会话">会话</button>
+			<button id="new-btn" title="新会话">＋新</button>
+		</header>
+
+		<div id="body">
+			<aside id="sidebar">
+				<div class="sidebar-head">
+					<span class="sidebar-title">文件</span>
+					<button id="change-dir-btn" title="更改工作目录">📂 换目录</button>
+					<button id="add-file-btn" title="新建文件/目录">＋</button>
+				</div>
+				<div id="cwd-label" title="工作目录">—</div>
+				<div id="file-tree"></div>
+			</aside>
+			<div class="resizer resizer-left" data-side="sidebar"></div>
+
+			<section id="main-col">
+				<div id="sessions-panel" hidden>
+					<ul id="sessions-list"></ul>
+				</div>
+
+				<div id="git-panel" hidden>
+					<div class="panel-head">
+						<span id="git-branch">Git</span>
+						<div class="panel-head-actions">
+							<button id="git-refresh" title="刷新">⟳</button>
+							<button id="git-close" title="关闭">✕</button>
+						</div>
+					</div>
+					<div id="git-status"></div>
+					<div id="git-diff-wrap" hidden>
+						<div id="git-diff-head"><span id="git-diff-file"></span><button id="git-diff-close">✕</button></div>
+						<pre id="git-diff"></pre>
+					</div>
+				</div>
+
+				<main id="chat">
+					<div id="messages"></div>
+					<div id="status-bar">初始化中…</div>
+				</main>
+
+				<footer id="editor">
+					<textarea id="input" placeholder="输入消息给 pi…  Ctrl+Enter 发送, Esc 中止"></textarea>
+					<div id="actions">
+						<button id="send-btn" disabled>发送</button>
+						<button id="abort-btn" hidden>中止</button>
+					</div>
+				</footer>
+			</section>
+			<div class="resizer resizer-right" data-side="editor"></div>
+
+			<!-- Persistent file editor panel -->
+			<aside id="editor-panel" hidden>
+				<div class="panel-head">
+					<span id="editor-title">文件</span>
+					<label class="toggle-label-btn" title="自动换行开关">
+						<input type="checkbox" id="wrap-toggle">
+						<span>换行</span>
+					</label>
+					<label class="view-toggle" title="预览开关">
+						<input type="checkbox" id="preview-toggle">
+						<span class="toggle-label">预览</span>
+					</label>
+					<div class="panel-head-actions">
+						<button id="save-btn" disabled title="保存 (Ctrl/Cmd+S)">💾 保存</button>
+						<button id="close-editor-btn" title="关闭编辑器">✕</button>
+					</div>
+				</div>
+				<div id="editor-meta"></div>
+				<div id="editor-bodies">
+					<div id="cm-editor"></div>
+					<div class="resizer resizer-split" data-side="split"></div>
+					<div id="preview-pane">
+						<div id="preview-content" hidden></div>
+						<iframe id="preview-frame" hidden sandbox="allow-scripts allow-modals"></iframe>
+					</div>
+				</div>
+				<div id="editor-status"></div>
+			</aside>
+		</div>
+	</div>
+
+	<script type="module" src="app.bundle.js"></script>
+</body>
+</html>
