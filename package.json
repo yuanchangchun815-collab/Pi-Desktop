@@ -62,7 +62,7 @@
     "electron-builder": "^26.15.3",
     "electron-packager": "^17.1.2",
     "esbuild": "^0.28.2",
-    "eslint": "^9.39.4",
+    "eslint": "^10.9.0",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.9.6",
     "typescript": "^5.5.0",
