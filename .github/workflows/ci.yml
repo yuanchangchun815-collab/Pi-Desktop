@@ -33,5 +33,8 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Run unit tests
+        run: npm test
+
       - name: Run smoke test
         run: node scripts/smoke-pi.mjs || echo "smoke test skipped (no auth configured)"

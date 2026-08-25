@@ -27,6 +27,7 @@
     "build:renderer": "esbuild renderer/app.ts --bundle --format=esm --outfile=dist/renderer/app.bundle.js --sourcemap --external:electron",
     "build:assets": "node scripts/copy-assets.mjs",
     "watch": "tsc -w -p tsconfig.json",
+  "test": "npm run build:main && node --test \"test/*.test.mjs\"",
     "start": "npm run build && electron .",
     "start:dev": "npm run build && cross-env PI_DESKTOP_DEV=1 electron .",
     "pack": "npm run build && electron-builder --dir",
