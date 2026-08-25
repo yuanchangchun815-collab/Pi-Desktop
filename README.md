@@ -29,6 +29,16 @@
 - 📦 **打包发布**：electron-builder 产出 `.app` / `.dmg` / NSIS 安装包 / AppImage
 - 📋**右键复制路径**：在文件树上右键可复制文件绝对路径，方便在对话中引用
 
+## 截图
+
+> 截图稍后补充（占位）——发布前请替换为实际运行截图。建议图片存于 `docs/screenshots/` 目录并提交到仓库。
+
+| | |
+|---|---|
+| <img src="docs/screenshots/chat.png" width="400" alt="主聊天界面" /> | <img src="docs/screenshots/editor.png" width="400" alt="编辑面板与 Git 面板" /> |
+
+*预留：主窗口（左文件树 / 中聊天 / 右编辑器）；更多截图可参考 `docs/screenshots/`。*
+
 ## 技术栈
 
 - **[Electron](https://www.electronjs.org/)** — 桌面壳（主进程 + 渲染进程 + preload 安全桥）
