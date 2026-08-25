@@ -72,6 +72,11 @@
     "appId": "dev.pidesktop.app",
     "productName": "Pi Desktop",
     "asar": true,
+    "publish": {
+      "provider": "github",
+      "owner": "yuanchangchun815-collab",
+      "repo": "Pi-Desktop"
+    },
     "files": [
       "dist/**/*",
       "package.json"

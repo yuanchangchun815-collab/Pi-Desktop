@@ -1,5 +1,9 @@
 # Pi Desktop
 
+[![CI](https://github.com/yuanchangchun815-collab/Pi-Desktop/actions/workflows/ci.yml/badge.svg)](https://github.com/yuanchangchun815-collab/Pi-Desktop/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/yuanchangchun815-collab/Pi-Desktop/blob/main/LICENSE)
+[![Dependabot](https://img.shields.io/badge/Dependabot-enabled-blue.svg)](https://github.com/yuanchangchun815-collab/Pi-Desktop/security/dependabot)
+
 用 Electron 桌面端来使用和控制 **pi**（编码智能体）完整功能的桌面应用。
 
 通过官方 SDK `@earendil-works/pi-coding-agent` 将 pi 的 agent 引擎直接嵌入 Electron 主进程，在图形界面里获得与终端相同的完整能力。
@@ -92,6 +96,17 @@ npm run dist:mac    # 生成 macOS dmg + zip
 ```
 
 产物输出到 `release/`。
+
+### 自动发布（GitHub Releases）
+
+推送一个 `v*` 标签即可触发 `.github/workflows/release.yml`，在 Linux / macOS / Windows 三平台分别构建并上传到 [GitHub Releases](https://github.com/yuanchangchun815-collab/Pi-Desktop/releases)：
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+> ⚠️ 当前产物**未做代码签名**（macOS / Windows），安装时系统会提示“未知开发者/可能有害”。如需消除提示，需配置对应的开发者证书——开源阶段通常不含签名，属正常现象。
 
 ### 关于精简包体积（研究与结论）
 
